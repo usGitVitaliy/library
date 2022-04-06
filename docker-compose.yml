@@ -1,0 +1,86 @@
+version: "3.8"
+
+services:
+    nginx:
+        image: nginx:1.18.0
+        container_name: nginx-library
+        ports:
+            - 8084:80
+        volumes:
+            - ./docker/container-config/nginx.conf:/etc/nginx.conf
+            - ./docker/container-config/nginx.default.conf:/etc/nginx/conf.d/default.conf
+            - ./laravel-files:/var/www/library.com
+        links:
+            - fpm
+        networks:
+            - library-network
+
+    fpm:
+        build:
+            context: .
+            dockerfile: docker/docker-files/fpm.dockerFile
+        container_name: fpm-library
+        volumes:
+            - ./docker/container-config/php.ini-development:/usr/local/etc/php/php.ini
+            - ./laravel-files:/var/www/library.com
+        links:
+            - mysql
+        networks:
+            - library-network
+
+    mysql:
+        #image: mysql:8.0.25
+        build:
+            context: .
+            dockerfile: docker/docker-files/mysql.dockerFile
+        container_name: mysql-library
+        ports:
+            - 36063:3306
+        volumes:
+            - dbdata:/var/lib/mysql/
+            - ./docker/scripts/add-user-data-db/add-user-db.sql:/home/project-config/add-user-db.sql
+            - ./docker/scripts/add-user-data-db/add-user.sh:/docker-entrypoint-initdb.d/add-user.sh
+        environment:
+            #- MYSQL_DATABASE=library
+            #- MYSQL_ROOT_PASSWORD='Root1pass!'
+            MYSQL_DATABASE: library
+            MYSQL_ROOT_PASSWORD: 'Root1pass!'
+            MYSQL_USER: laravel_library
+            MYSQL_PASSWORD: 'Lara1Lib!'
+        networks:
+            - library-network
+
+    phpmyadmin:
+        image: phpmyadmin
+        container_name: phpmyadmin-library
+        ports:
+            - 8085:80
+        environment:
+            PMA_HOST: mysql
+        volumes:
+            #- ./docker/container-config/phpmyadmin.config.inc.php:/var/www/html/config.inc.php
+            - ./docker/container-config/phpmyadmin.config.inc.php:/etc/phpmyadmin/config.user.inc.php
+        links:
+            - mysql
+        networks:
+            - library-network
+
+    composer:
+        #image: composer
+        build:
+            context: .
+            dockerfile: docker/docker-files/composer.dockerFile
+        container_name: composer-library
+        volumes:
+            - ./laravel-files:/var/www/library.com
+            - ./docker/container-config/php.ini-development:/usr/local/etc/php/php.ini
+        networks:
+            - library-network
+
+networks:
+    library-network:
+        driver: bridge
+
+volumes:
+    dbdata:
+        driver: local

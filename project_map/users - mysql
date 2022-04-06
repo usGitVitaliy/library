@@ -1,0 +1,22 @@
+Пользователи MYSQL
+
+    user: root
+password: Root1pass!
+
+    user: php_madm
+password: My1Admin!
+- пользователь для phpmyadmin
+GRANT ALL PRIVILEGES ON *.* TO 'php_madm'@'%';
+
+    user: laravel_library
+password: Lara1Lib!
+- пользователь для работы laravel
+GRANT USAGE ON *.* TO `laravel_library`@`%`;
+GRANT ALL PRIVILEGES ON `library`.* TO `laravel_library`@`%`;
+
+    user: pma
+password: pma1Pass!
+- пользователь для доступа к базе "phpmyadmin"
+    (настройка "phpmyadmin")
+GRANT USAGE ON *.* TO `pma`@`%`;
+GRANT SELECT, INSERT, UPDATE, DELETE ON `phpmyadmin`.* TO `pma`@`%`;
